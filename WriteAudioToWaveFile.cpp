@@ -126,3 +126,13 @@ int main()
     return 0;
 }
 
+/*
+// Read in the file
+//
+wav.read((char*)(&header), sizeof(WaveHeader));
+numSamples = header.dataChunkSize / 2;
+cout << numSamples << endl;
+// Create a dynamic array of samples
+waveData = new int16_t[numSamples];
+wav.read((char*)(waveData), header.dataChunkSize);
+*/
