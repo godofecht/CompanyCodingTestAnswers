@@ -7,20 +7,47 @@
 #define PI 3.14159265359
 #endif
 
+
+float getPitchFromNumZeroCrossings (const int numZeroCrossings, const int numSamples, const double sampleRate)
+{
+    const float bufferTimeInSeconds = (float) numSamples / (float) sampleRate;
+    const float numCycles = (float) numZeroCrossings / 2.0f;
+    const float pitchInHertz = numCycles / bufferTimeInSeconds;
+    
+    return pitchInHertz;
+}
+
+int getNumZeroCrossings (const std::vector<double>& buffer)
+{
+//    jassert (numSamplesToUse <= buffer.getNumSamples());
+    int numZeroCrossings = 0;
+
+    for (int sample = 1; sample < buffer.size(); ++sample)
+    {
+        if (((buffer[sample - 1] > 0.0f) && (buffer[sample] <= 0.0f))
+         || ((buffer[sample - 1] < 0.0f) && (buffer[sample] >= 0.0f)))
+        {
+            ++numZeroCrossings;
+        }
+    }
+
+    return numZeroCrossings;
+}
+
 class Oscillator
 {
     double frequency;
-    int sampleIndex;
-    int samplesPerCycle;
+    double sampleIndex;
+    double samplesPerCycle;
     double sampleRate;
 
 public:
     
-    Oscillator ()
+    Oscillator (double newFrequency, double newSampleRate)
     {
         sampleIndex = 0;
-        frequency = 441.0;
-        sampleRate = 48000.0;
+        frequency = newFrequency;
+        sampleRate = newSampleRate;
     }
     
     void setSampleRate (const double newSampleRate)
@@ -41,20 +68,23 @@ public:
         sampleIndex++;
         
         //reset the sampleIndex after each cycle
-        if (sampleIndex >= samplesPerCycle) sampleIndex = 0;
+        if (sampleIndex >= samplesPerCycle)
+            sampleIndex = sampleIndex - samplesPerCycle;
         
         return sample;
     }
 };
 
 
-void writeToFile (std::ofstream &file, const int value, const int size) {
+void writeToFile (std::ofstream &file, const int value, const int size)
+{
     file.write (reinterpret_cast<const char*> (&value), size);
 }
 
-void writeVectorToFile (const std::vector<float> bufferData, const double sampleRate)
+
+void writeVectorToFile (const std::vector<double> bufferData, const double sampleRate)
 {
-   const int bitDepth = 24;
+   int bitDepth = 24;
    std::ofstream file;
    file.open ("waveform.wav", std::ios::binary);
     
@@ -79,7 +109,7 @@ void writeVectorToFile (const std::vector<float> bufferData, const double sample
 
    int preAudioPosition = file.tellp();
 
-   auto maxAmplitude = pow (2, bitDepth - 1) - 1;
+   auto maxAmplitude = powf (2, bitDepth - 1) - 1;
    for(int i = 0; i < bufferData.size(); i++ )
    {
         auto sample =  bufferData[i];
@@ -103,13 +133,26 @@ void writeVectorToFile (const std::vector<float> bufferData, const double sample
 //lengthInSeconds.
 void writeSinWaveToFile (const double frequency, const double lengthInSeconds)
 {
-    double sampleRate = 48000;
-    Oscillator sinGenerator;
+    double sampleRate = 48000.0;
+    
+    //Check range
+    if (frequency < 0)
+    {
+        throw std::invalid_argument ("Frequency invalid, below 0");
+        return;
+    }
+    else if (frequency > sampleRate / 2.0)
+    {
+        throw std::invalid_argument ("Frequency invalid, above Nyquist");
+        return;
+    }
+    
+    Oscillator sinGenerator (frequency, sampleRate);
 
     sinGenerator.setFrequency (frequency);
     sinGenerator.setSampleRate (sampleRate);
     
-    std::vector<float> bufferData;
+    std::vector<double> bufferData;
     int numSamplesInLength = lengthInSeconds * sampleRate;
     
     while (numSamplesInLength--)
@@ -117,22 +160,28 @@ void writeSinWaveToFile (const double frequency, const double lengthInSeconds)
         bufferData.push_back (sinGenerator.getNextSample());
     }
 
+    auto numCrossings = getNumZeroCrossings (bufferData);
+    std::cout << "Expected pitch is: " << frequency << std::endl;
+    std::cout << "Generated Pitch is: " << getPitchFromNumZeroCrossings (numCrossings, bufferData.size(), sampleRate);
+    
     writeVectorToFile (bufferData, sampleRate);
 }
 
 int main()
 {
-    writeSinWaveToFile (440, 1.0);
+    try
+    {
+        writeSinWaveToFile (7040, 1.0);
+    }
+    catch (std::invalid_argument& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return -1;
+    }
+    
     return 0;
 }
 
-/*
-// Read in the file
-//
-wav.read((char*)(&header), sizeof(WaveHeader));
-numSamples = header.dataChunkSize / 2;
-cout << numSamples << endl;
-// Create a dynamic array of samples
-waveData = new int16_t[numSamples];
-wav.read((char*)(waveData), header.dataChunkSize);
-*/
+
+
+
