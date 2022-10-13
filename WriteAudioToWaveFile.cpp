@@ -19,7 +19,6 @@ float getPitchFromNumZeroCrossings (const int numZeroCrossings, const int numSam
 
 int getNumZeroCrossings (const std::vector<double>& buffer)
 {
-//    jassert (numSamplesToUse <= buffer.getNumSamples());
     int numZeroCrossings = 0;
 
     for (int sample = 1; sample < buffer.size(); ++sample)
@@ -48,6 +47,7 @@ public:
         sampleIndex = 0;
         frequency = newFrequency;
         sampleRate = newSampleRate;
+        samplesPerCycle = sampleRate / frequency;
     }
     
     void setSampleRate (const double newSampleRate)
@@ -81,6 +81,73 @@ void writeToFile (std::ofstream &file, const int value, const int size)
     file.write (reinterpret_cast<const char*> (&value), size);
 }
 
+
+void writeSinWaveToFileNonVerbose (const double frequency, const double lengthInSeconds)
+{
+    double sample, intSample;
+    int bitDepth = 24;
+    float sampleIndex = 0;
+    float sampleRate = 48000;
+    float samplesPerCycle = sampleRate / frequency;
+    float numSamplesInLength = lengthInSeconds * sampleRate;
+    //Check range
+    if (frequency < 0)
+    {
+        throw std::invalid_argument ("Frequency invalid, below 0");
+        return;
+    }
+    else if (frequency > sampleRate / 2.0)
+    {
+        throw std::invalid_argument ("Frequency invalid, above Nyquist");
+        return;
+    }
+    
+    std::ofstream file;
+    file.open ("waveform.wav", std::ios::binary);
+     
+    //Header chunk
+    file << "RIFF";
+    file << "----";
+    file << "WAVE";
+
+    //Format chunk
+    file << "fmt ";
+    writeToFile (file, 16, 4); // Size
+    writeToFile (file, 1, 2); // Compression code
+    writeToFile (file, 1, 2); // Number of channels
+    writeToFile (file, sampleRate, 4); // Sample rate
+    writeToFile (file, sampleRate * bitDepth / 8, 4 ); // Byte rate
+    writeToFile (file, bitDepth / 8, 2); // Block align
+    writeToFile (file, bitDepth, 2); // Bit depth
+
+    //Data chunk
+    file << "data";
+    file << "----";
+
+    int preAudioPosition = file.tellp();
+    auto maxAmplitude = powf (2, bitDepth - 1) - 1;
+    
+    for (int i = 0; i < numSamplesInLength; i++ )
+    {
+        //reset the sampleIndex after each cycle
+        if (sampleIndex >= samplesPerCycle)
+            sampleIndex = sampleIndex - samplesPerCycle;
+        
+        sample = (1.0 * sin (2.0 * PI * sampleIndex / samplesPerCycle));
+
+        intSample = sample * maxAmplitude;
+        writeToFile (file, intSample, (bitDepth / 8));
+        
+        sampleIndex++;
+    }
+    
+    int postAudioPosition = file.tellp();
+    file.seekp (preAudioPosition - 4);
+    writeToFile (file, postAudioPosition - preAudioPosition, 4);
+    file.seekp (4, std::ios::beg);
+    writeToFile (file, postAudioPosition - 8, 4);
+    file.close();
+}
 
 void writeVectorToFile (const std::vector<double> bufferData, const double sampleRate)
 {
