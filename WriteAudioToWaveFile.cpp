@@ -238,7 +238,7 @@ int main()
 {
     try
     {
-        writeSinWaveToFile (7040, 1.0);
+        writeSinWaveToFileNonVerbose (7040, 1.0);
     }
     catch (std::invalid_argument& e)
     {
