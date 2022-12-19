@@ -8,6 +8,74 @@
 #endif
 
 
+/*
+
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <vector>
+
+// Structure for the wave file header
+struct WavHeader {
+  char chunkId[4];
+  uint32_t chunkSize;
+  char format[4];
+  char subchunk1Id[4];
+  uint32_t subchunk1Size;
+  uint16_t audioFormat;
+  uint16_t numChannels;
+  uint32_t sampleRate;
+  uint32_t byteRate;
+  uint16_t blockAlign;
+  uint16_t bitsPerSample;
+  char subchunk2Id[4];
+  uint32_t subchunk2Size;
+};
+
+// Function to create an audio wave file with a pure sinusoidal sound
+void createWaveFile(float frequency, int length) {
+  // Set the wave file header values
+  WavHeader header;
+  strncpy(header.chunkId, "RIFF", 4);
+  header.chunkSize = 36 + length * 48000 * 3;
+  strncpy(header.format, "WAVE", 4);
+  strncpy(header.subchunk1Id, "fmt ", 4);
+  header.subchunk1Size = 16;
+  header.audioFormat = 1;
+  header.numChannels = 1;
+  header.sampleRate = 48000;
+  header.byteRate = 48000 * 3;
+  header.blockAlign = 3;
+  header.bitsPerSample = 24;
+  strncpy(header.subchunk2Id, "data", 4);
+  header.subchunk2Size = length * 48000 * 3;
+
+  // Create the wave file
+  std::ofstream file("audio.wav", std::ios::binary);
+  if (!file.is_open()) {
+    throw std::runtime_error("Error: Could not create wave file");
+  }
+
+  // Write the wave file header
+  file.write(reinterpret_cast<char*>(&header), sizeof(header));
+
+  // Generate the sinusoidal sound data
+  std::vector<char> data(48000 * 3);
+  for (int i = 0; i < length; i++) {
+    for (int j = 0; j < 48000; j++) {
+      float t = static_cast<float>(i * 48000 + j) / 48000.0f;
+      float value = std::sin(2.0f * M_PI * frequency * t);
+      int32_t sample = static_cast<int32_t>(value * 8388607.0f);
+      data[3 * j] = static_cast<char>(sample & 0xff);
+      data[3 * j + 1] = static_cast<char>((sample >> 8) & 0xff);
+      data[3 * j + 2] = static_cast<char>((sample >> 16) & 0xff);
+    }
+    file.write(data.data(), data.size());
+  }
+}
+
+*/
+
 
 //Yuriy from AudioMovers
 /*
