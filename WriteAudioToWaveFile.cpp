@@ -75,32 +75,13 @@ void createWaveFile(float frequency, int length) {
 }
 
 */
-
-
-//Yuriy from AudioMovers
 /*
-
-Hi Abhishek, so as discussed the task
-
 Write a function in c++ which creates an audio wave file with pure sinusoidal sound.
 on input: sound frequency in Hertzs and a length of the file in seconds
 on output:
 1. audio.wav file 24 bit, mono, 48Khz in current directory. OR
 2. an exception with an explanation if there was an error anywhere.
-
-Thanks,
-Yuriy
-
 */
-
-
-/*
-I've never worked directly with WAV files before. I did the research and wrote a function in about 15 minutes and sent it over.
-Got some feedback. Fixed all the points in 15 more minutes. Lost the job offer on the basis of the initial submission.
-I've just closed a deal with a client and have some free time.
-So here goes. You want verbosity, you can have it.
-*/
-
 
 float getPitchFromNumZeroCrossings (const int numZeroCrossings, const int numSamples, const double sampleRate)
 {
